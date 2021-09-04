@@ -25,6 +25,12 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', (message) => {
         io.emit('message', message)
     })
+
+    // listen for sendLocation event and emit that message to all connected users
+    socket.on('sendLocation', (coords) => {
+        const {latitude, longitude } = coords;
+        io.emit('message', `https://google.com/maps?q=${latitude},${longitude}`)
+    })
     
 
     // use on() within a on('connection') to run code upon a user disconnecting

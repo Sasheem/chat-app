@@ -1,29 +1,51 @@
 const socket = io()
 
+// elements
+const $messageForm = document.querySelector('#message-form')
+const $messageInput = $messageForm.querySelector('input')
+const $messageButton = $messageForm.querySelector('button')
+const $locationButton = document.querySelector('#share-location')
+
 socket.on('message', (message) => {
     console.log(message)
 })
 
 // listen for when the user submtis form
-document.querySelector('#message-form').addEventListener('submit', (e) => {
+$messageForm.addEventListener('submit', (e) => {
     e.preventDefault()
+
+    // disable button
+    $messageButton.setAttribute('disabled', 'disabled')
 
     // send message from form to server
     const message = e.target.elements.message.value
     socket.emit('sendMessage', message, (error) => {
+        // reset form
+        $messageButton.removeAttribute('disabled')
+        $messageInput.value = ''
+        $messageInput.focus()
+
+        // error message handling
         error ? console.log(error) : console.log('Message delivered')
     })
 })
 
 // listen for when user clicks submit button
-document.querySelector('#share-location').addEventListener('click', () => {
+$locationButton.addEventListener('click', () => {
     if (!navigator.geolocation) {
         return alert('Geolocation is not supported by your browser')
     }
 
+    // disable button
+    $locationButton.setAttribute('disabled', 'disabled')
+
+    // async method - get location via mdn geolocation
     navigator.geolocation.getCurrentPosition((position) => {
         const { longitude, latitude } = position.coords
         socket.emit('sendLocation', { longitude, latitude }, () => {
+
+            // enable button
+            $locationButton.removeAttribute('disabled')
             console.log('Location shared')
         })
     })

@@ -24,15 +24,21 @@ io.on('connection', (socket) => {
 
     // listen for sendMessage event and emit that message to all connected users
     socket.on('sendMessage', (message, callback) => {
+        const trim = message.trim()
         const filter = new Filter()
 
+        // check if message exists
+        if (message === "") {
+            return callback('Enter a message')
+        }
+ 
         // check message for profanity
-        if (filter.isProfane(message)) {
+        if (filter.isProfane(trim)) {
             // deliver error message as acknowledgement to client
             return callback('Profanity is not allowed')
         }
         // send out message to all client users connected to server
-        io.emit('message', message)
+        io.emit('message', trim)
         // deliver empty param so callback knows acknowledgement is successful
         callback()
     })

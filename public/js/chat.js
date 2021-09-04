@@ -10,7 +10,9 @@ document.querySelector('#message-form').addEventListener('submit', (e) => {
 
     // send message from form to server
     const message = e.target.elements.message.value
-    socket.emit('sendMessage', message)
+    socket.emit('sendMessage', message, (error) => {
+        error ? console.log(error) : console.log('Message delivered')
+    })
 })
 
 // listen for when user clicks submit button
@@ -21,6 +23,8 @@ document.querySelector('#share-location').addEventListener('click', () => {
 
     navigator.geolocation.getCurrentPosition((position) => {
         const { longitude, latitude } = position.coords
-        socket.emit('sendLocation', { longitude, latitude })
+        socket.emit('sendLocation', { longitude, latitude }, () => {
+            console.log('Location shared')
+        })
     })
 })

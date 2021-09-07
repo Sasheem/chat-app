@@ -4,7 +4,7 @@ const http = require('http')
 const express = require('express')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
-const { generateMessage } = require('./utils/messages')
+const { generateMessage, generateLocation } = require('./utils/messages')
 
 const app = express()
 const server = http.createServer(app)
@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
 
     // listen for sendMessage event and emit that message to all connected users
     socket.on('sendMessage', (message, callback) => {
-        const trim = message.text.trim()
+        const trim = message.trim()
         const filter = new Filter()
 
         // check if message exists
@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
     socket.on('sendLocation', (coords, callback) => {
         const {latitude, longitude } = coords
 
-        io.emit('locationMessage', `https://google.com/maps?q=${latitude},${longitude}`)
+        io.emit('locationMessage', generateLocation(`https://google.com/maps?q=${latitude},${longitude}`))
         callback()
     })
     

@@ -9,9 +9,20 @@ const $messages = document.querySelector('#messages')
 
 // templates
 const messageTemplate = document.querySelector('#message-template').innerHTML
+const locationMessageTemplate = document.querySelector('#location-template').innerHTML
 
+// listen for message from server
+// add message template to the screen
 socket.on('message', (message) => {
     const html = Mustache.render(messageTemplate, { message })
+    $messages.insertAdjacentHTML('beforeend', html)
+})
+
+// listen for locationMessage from server
+// add location template to the screen
+socket.on('locationMessage', (url) => {
+    console.log(url)
+    const html = Mustache.render(locationMessageTemplate, { url })
     $messages.insertAdjacentHTML('beforeend', html)
 })
 

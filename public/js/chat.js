@@ -14,7 +14,10 @@ const locationMessageTemplate = document.querySelector('#location-template').inn
 // listen for message from server
 // add message template to the screen
 socket.on('message', (message) => {
-    const html = Mustache.render(messageTemplate, { message })
+    const html = Mustache.render(messageTemplate, { 
+        message: message.text, 
+        createdAt: moment(message.createdAt).format('h:mm a')
+    })
     $messages.insertAdjacentHTML('beforeend', html)
 })
 

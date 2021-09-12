@@ -18,12 +18,19 @@ app.use(express.static(publicDirectoryPath))
 // listen for user connecting to server
 io.on('connection', (socket) => {
     console.log(`New WebSocket connection`)
-    socket.emit('message', generateMessage('Welcome!'))
+    
 
-    // emit message to all users except the one joining
-    socket.broadcast.emit('message', generateMessage('A new user has joined!'))
+    // LISTENER: listen for join evnt from client
+    socket.on('join', ({ username, room }) => {
+        socket.join(room)
 
-    // listen for sendMessage event and emit that message to all connected users
+        socket.emit('message', generateMessage('Welcome!'))
+
+        // emit message to all users except the one joining
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`))
+    })
+
+    // LISTENER: listen for sendMessage event and emit that message to all connected users
     socket.on('sendMessage', (message, callback) => {
         const trim = message.trim()
         const filter = new Filter()
@@ -39,12 +46,12 @@ io.on('connection', (socket) => {
             return callback('Profanity is not allowed')
         }
         // send out message to all client users connected to server
-        io.emit('message', generateMessage(trim))
+        io.to('anime').emit('message', generateMessage(trim))
         // deliver empty param so callback knows acknowledgement is successful
         callback()
     })
 
-    // listen for sendLocation event and emit that message to all connected users
+    // LISTENER: listen for sendLocation event and emit that message to all connected users
     socket.on('sendLocation', (coords, callback) => {
         const {latitude, longitude } = coords
 
@@ -53,7 +60,7 @@ io.on('connection', (socket) => {
     })
     
 
-    // use on() within a on('connection') to run code upon a user disconnecting
+    // LISTENER: use on() within a on('connection') to run code upon a user disconnecting
     socket.on('disconnect', () => {
         io.emit('message', generateMessage('A user has left!'))
     })

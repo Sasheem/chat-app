@@ -11,6 +11,8 @@ const $messages = document.querySelector('#messages')
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationMessageTemplate = document.querySelector('#location-template').innerHTML
 
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
 // listen for message from server
 // add message template to the screen
 socket.on('message', (message) => {
@@ -72,3 +74,8 @@ $locationButton.addEventListener('click', () => {
         })
     })
 })
+
+// emit event for server to listen for
+// join user to a room
+// needs validation
+socket.emit('join', { username, room })

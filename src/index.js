@@ -5,6 +5,7 @@ const express = require('express')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
 const { generateMessage, generateLocation } = require('./utils/messages')
+const { addUser, removeUser, getUsersInRoom, getUser } = require('./utils/users')
 
 const app = express()
 const server = http.createServer(app)
@@ -21,13 +22,23 @@ io.on('connection', (socket) => {
     
 
     // LISTENER: listen for join evnt from client
-    socket.on('join', ({ username, room }) => {
-        socket.join(room)
+    socket.on('join', (userInfo, callback) => {
+        // add user to the room
+        const { error, user } = addUser({ id: socket.id, ...userInfo })
 
+        // check if the destructured error exists
+        // fire callback function supplied from client
+        if (error) {
+            return callback(error)
+        }
+
+        // if no error then user was successfully added
+        socket.join(user.room)
         socket.emit('message', generateMessage('Welcome!'))
 
         // emit message to all users except the one joining
-        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`))
+        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`))
+        callback()
     })
 
     // LISTENER: listen for sendMessage event and emit that message to all connected users
@@ -62,7 +73,11 @@ io.on('connection', (socket) => {
 
     // LISTENER: use on() within a on('connection') to run code upon a user disconnecting
     socket.on('disconnect', () => {
-        io.emit('message', generateMessage('A user has left!'))
+        const user = removeUser(socket.id)
+
+        if (user) {
+            io.to(user.room).emit('message', generateMessage(`${user.username} has left.`))
+        }
     })
 })
 

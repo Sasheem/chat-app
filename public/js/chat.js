@@ -78,4 +78,11 @@ $locationButton.addEventListener('click', () => {
 // emit event for server to listen for
 // join user to a room
 // needs validation
-socket.emit('join', { username, room })
+// 3rd arg = acknowledgement callback, server runs this as callback()
+socket.emit('join', { username, room }, (error) => {
+    // CONTINUE HERE
+    if (error) {
+        alert(error)
+        location.href = '/'
+    }
+})

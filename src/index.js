@@ -34,17 +34,18 @@ io.on('connection', (socket) => {
 
         // if no error then user was successfully added
         socket.join(user.room)
-        socket.emit('message', generateMessage('Welcome!'))
+        socket.emit('message', generateMessage('Admin', 'Welcome!'))
 
         // emit message to all users except the one joining
-        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`))
+        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`))
         callback()
     })
 
     // LISTENER: listen for sendMessage event and emit that message to all connected users
     socket.on('sendMessage', (message, callback) => {
-        const trim = message.trim()
+        const text = message.trim()
         const filter = new Filter()
+        const user = getUser(socket.id)
 
         // check if message exists
         if (message === "") {
@@ -52,12 +53,12 @@ io.on('connection', (socket) => {
         }
  
         // check message for profanity
-        if (filter.isProfane(trim)) {
+        if (filter.isProfane(text)) {
             // deliver error message as acknowledgement to client
             return callback('Profanity is not allowed')
         }
         // send out message to all client users connected to server
-        io.to('anime').emit('message', generateMessage(trim))
+        io.to(user.room).emit('message', generateMessage(user.username, text))
         // deliver empty param so callback knows acknowledgement is successful
         callback()
     })
@@ -65,8 +66,8 @@ io.on('connection', (socket) => {
     // LISTENER: listen for sendLocation event and emit that message to all connected users
     socket.on('sendLocation', (coords, callback) => {
         const {latitude, longitude } = coords
-
-        io.emit('locationMessage', generateLocation(`https://google.com/maps?q=${latitude},${longitude}`))
+        const user = getUser(socket.id)
+        io.to(user.room).emit('locationMessage', generateLocation(user.username, `https://google.com/maps?q=${latitude},${longitude}`))
         callback()
     })
     
@@ -76,7 +77,7 @@ io.on('connection', (socket) => {
         const user = removeUser(socket.id)
 
         if (user) {
-            io.to(user.room).emit('message', generateMessage(`${user.username} has left.`))
+            io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left.`))
         }
     })
 })

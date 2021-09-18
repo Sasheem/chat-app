@@ -25,6 +25,7 @@ io.on('connection', (socket) => {
     socket.on('join', (userInfo, callback) => {
         // add user to the room
         const { error, user } = addUser({ id: socket.id, ...userInfo })
+        const { room, username } = user; 
 
         // check if the destructured error exists
         // fire callback function supplied from client
@@ -33,11 +34,18 @@ io.on('connection', (socket) => {
         }
 
         // if no error then user was successfully added
-        socket.join(user.room)
+        socket.join(room)
         socket.emit('message', generateMessage('Admin', 'Welcome!'))
 
         // emit message to all users except the one joining
-        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`))
+        socket.broadcast.to(room).emit('message', generateMessage('Admin', `${username} has joined!`))
+
+        // send a list to all users that are connected to the room
+        io.to(room).emit('roomData', {
+            room: room,
+            users: getUsersInRoom(room)
+        })
+
         callback()
     })
 
@@ -59,6 +67,7 @@ io.on('connection', (socket) => {
         }
         // send out message to all client users connected to server
         io.to(user.room).emit('message', generateMessage(user.username, text))
+
         // deliver empty param so callback knows acknowledgement is successful
         callback()
     })
@@ -77,7 +86,14 @@ io.on('connection', (socket) => {
         const user = removeUser(socket.id)
 
         if (user) {
+            // alert everyone in room that user left
             io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left.`))
+            
+            // update user list for all users connected to room
+            io.to(user.room).emit('roomData', {
+                room: user.room,
+                users: getUsersInRoom(user.room)
+            })
         }
     })
 })

@@ -14,6 +14,39 @@ const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
 
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
 
+// perform auto scroll to newest message if user isn't looking at old messages
+const autoscroll = () => {
+    // new messages element
+    const $newMessage = $messages.lastElementChild
+
+    // height of new message
+    const newMessageStyles = getComputedStyle($newMessage)
+    const newMessageMargin = parseInt(newMessageStyles.marginBottom)
+    const newMessageHeight = $newMessage.offsetHeight + newMessageMargin
+    console.log(newMessageMargin)
+
+    // visible height
+    const visibleHeight = $messages.offsetHeight
+
+    // height of messages container
+    // scrollHeight attr gives us the height we are able to scroll through
+    const contentHeight = $messages.scrollHeight
+
+    // calculate how far down we have scrolled
+    // how far have I scrolled?
+    // scrollTop attr gives us the amount of distance user has scroll from away from the top of interface
+    // ie the top of the screen to the top of the scroll bar
+    // then add visibleHeight to get the remaining distance to the bottom of the screen
+    const scrollOffset = $messages.scrollTop + visibleHeight
+
+    // perform conditional logic to figure out if we should auto scroll or not
+    // take total container height (not just what is visible) and subtract the last message from that
+    if (contentHeight - newMessageHeight <= scrollOffset) {
+        $messages.scrollTop = $messages.scrollHeight
+    }
+
+}
+
 // listen for message from server
 // add message template to the screen
 socket.on('message', (message) => {
@@ -23,6 +56,7 @@ socket.on('message', (message) => {
         createdAt: moment(message.createdAt).format('h:mm a')
     })
     $messages.insertAdjacentHTML('beforeend', html)
+    autoscroll()
 })
 
 // listen for locationMessage from server
@@ -35,6 +69,7 @@ socket.on('locationMessage', (message) => {
         createdAt: moment(message.createdAt).format('h:mm a')
     })
     $messages.insertAdjacentHTML('beforeend', html)
+    autoscroll()
 })
 
 // listen for roomData event from server
